@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tarot Flash Cards</title>
+
+<!-- PWA: Home Screen appearance -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tarot">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5e6e8">
+
+<!-- PWA: App icon (generated inline as a data URI) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjZjVlNmU4Ii8+PHJlY3QgeD0iNDUiIHk9IjI1IiB3aWR0aD0iOTAiIGhlaWdodD0iMTMwIiByeD0iMTAiIGZpbGw9IiNlOGM1Y2IiIHN0cm9rZT0iIzJhMWEyZSIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHRleHQgeD0iOTAiIHk9Ijk4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjQ4IiBmb250LWZhbWlseT0ic2VyaWYiIGZpbGw9IiMyYTFhMmUiPiYjOTczMzs8L3RleHQ+PHRleHQgeD0iOTAiIHk9IjE3MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxNCIgZm9udC1mYW1pbHk9InNlcmlmIiBmaWxsPSIjMmExYTJlIiBsZXR0ZXItc3BhY2luZz0iMiI+VEFST1Q8L3RleHQ+PC9zdmc+">
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --accent:#c9a84c;
+  --bg:#f5e6e8;
+  --text:#2a1a2e;
+  --muted:#9a7a8a;
+}
+
+body{
+  min-height:100vh;
+  background:var(--bg);
+  font-family:'Cormorant Garamond','Palatino Linotype',serif;
+  font-weight:600;
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:max(24px, env(safe-area-inset-top)) 16px max(52px, env(safe-area-inset-bottom));
+  background-image:
+    radial-gradient(ellipse 80% 40% at 15% 0%,rgba(220,170,180,.45) 0%,transparent 70%),
+    radial-gradient(ellipse 60% 50% at 85% 100%,rgba(200,150,165,.35) 0%,transparent 70%);
+}
+
+/* ─── Header ─────────────────────────────────────────── */
+.header{text-align:center;margin-bottom:26px}
+.eyebrow{font-family:'Cinzel',serif;font-size:9px;letter-spacing:7px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;font-weight:700}
+h1{font-family:'Cinzel',serif;font-size:clamp(20px,5vw,36px);font-weight:900;letter-spacing:3px;color:var(--text);text-shadow:0 0 40px rgba(180,100,120,.2)}
+
+/* ─── Suit Tabs ───────────────────────────────────────── */
+.suit-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center}
+.suit-tab{
+  padding:7px 13px;border-radius:3px;
+  border:1px solid #d4b0b8;background:transparent;
+  color:var(--muted);cursor:pointer;
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;font-weight:700;
+  transition:all .2s
+}
+.suit-tab:hover{color:#6a3a4a;border-color:#b88090}
+.suit-tab.active{
+  border-color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 12%,transparent);
+  color:var(--accent)
+}
+
+.suit-desc{font-size:13px;color:var(--muted);letter-spacing:.5px;margin-bottom:16px;text-align:center;font-style:italic}
+.counter{font-family:'Cinzel',serif;font-size:10px;color:#b89aaa;letter-spacing:4px;margin-bottom:18px}
+
+/* ─── Card Scene ──────────────────────────────────────── */
+.card-scene{
+  width:min(320px,88vw);
+  height:510px;
+  perspective:1400px;
+  margin-bottom:28px;
+  cursor:pointer
+}
+.card-inner{
+  width:100%;height:100%;
+  position:relative;
+  transform-style:preserve-3d;
+  transition:transform .65s cubic-bezier(.4,.2,.2,1)
+}
+.card-inner.flipped{transform:rotateY(180deg)}
+
+.face{
+  position:absolute;inset:0;border-radius:14px;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  overflow:hidden
+}
+
+/* ─── Front ───────────────────────────────────────────── */
+.front{
+  background:#e8c5cb;
+  border:3px solid rgba(0,0,0,.12);
+  box-shadow:0 8px 40px rgba(120,60,70,.2),0 24px 80px rgba(0,0,0,.15);
+  display:flex;flex-direction:column
+}
+.front-top{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 16px;
+  border-bottom:1px solid rgba(0,0,0,.12);
+  flex-shrink:0
+}
+.front-suit{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(0,0,0,.7);font-weight:900}
+.front-num{font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;color:rgba(0,0,0,.7);font-weight:900}
+
+.img-wrap{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:10px;overflow:hidden;position:relative
+}
+.img-wrap img{
+  max-height:100%;max-width:100%;
+  object-fit:contain;display:block;
+  border-radius:4px;
+  transition:opacity .3s
+}
+.img-placeholder{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:64px;opacity:.08;
+  pointer-events:none
+}
+
+.front-bot{
+  padding:12px 16px 14px;
+  border-top:1px solid rgba(0,0,0,.12);
+  text-align:center;flex-shrink:0
+}
+.front-name{font-family:'Cinzel',serif;font-size:clamp(13px,3vw,17px);letter-spacing:1.5px;color:#000000;font-weight:900}
+.front-hint{font-family:'Cinzel',serif;font-size:8px;letter-spacing:3px;color:rgba(0,0,0,.45);text-transform:uppercase;margin-top:8px;font-weight:700}
+
+/* ─── Back ────────────────────────────────────────────── */
+.back{
+  transform:rotateY(180deg);
+  border:3px solid rgba(0,0,0,.15);
+  box-shadow:0 0 40px rgba(180,100,110,.15),0 8px 40px rgba(120,60,70,.2),0 24px 80px rgba(0,0,0,.15);
+  background:linear-gradient(155deg,#e2b8bf 0%,#d9aab3 55%);
+  display:flex;flex-direction:column
+}
+.back-top{
+  padding:13px 18px 10px;
+  border-bottom:1px solid rgba(0,0,0,.12);
+  text-align:center;flex-shrink:0
+}
+.back-name{font-family:'Cinzel',serif;font-size:14px;letter-spacing:2px;color:#000000;font-weight:700}
+
+.back-scroll{
+  flex:1;overflow-y:auto;
+  padding:14px 18px;
+  display:flex;flex-direction:column;
+  gap:12px;
+  scrollbar-width:thin;
+  scrollbar-color:color-mix(in srgb,var(--accent) 25%,transparent) transparent
+}
+.back-scroll::-webkit-scrollbar{width:3px}
+.back-scroll::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--accent) 25%,transparent);border-radius:2px}
+
+.label{
+  font-family:'Cinzel',serif;font-size:8px;
+  letter-spacing:3px;text-transform:uppercase;
+  color:rgba(0,0,0,.55);
+  font-weight:700;
+  margin-bottom:5px
+}
+.keywords-text{font-size:14px;color:#1a0a0d;font-style:italic;line-height:1.55;font-weight:700}
+.meaning-text{font-size:15px;color:#000000;line-height:1.7;font-weight:700}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.2),transparent)}
+
+.back-bot{
+  padding:11px 18px 14px;
+  border-top:1px solid rgba(0,0,0,.12);
+  text-align:center;flex-shrink:0
+}
+.aff-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#ffd97a;font-weight:700;margin-bottom:5px}
+.aff-text{font-size:15px;font-style:italic;color:#ffd97a;line-height:1.55;font-weight:600}
+.sign-row{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:#000000;font-weight:700;margin-bottom:6px}
+.sign-row:empty{display:none}
+.back-hint{font-family:'Cinzel',serif;font-size:8px;letter-spacing:3px;color:rgba(0,0,0,.4);text-transform:uppercase;margin-top:8px}
+
+/* ─── Nav ─────────────────────────────────────────────── */
+.nav{display:flex;gap:14px;align-items:center}
+.nav-btn{
+  width:42px;height:42px;border-radius:50%;
+  border:1px solid #d4b0b8;background:transparent;
+  color:var(--muted);cursor:pointer;font-size:16px;
+  transition:all .2s;
+  display:flex;align-items:center;justify-content:center
+}
+.nav-btn:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
+.nav-btn:disabled{opacity:.3;cursor:default}
+.dots{display:flex;gap:5px;flex-wrap:wrap;max-width:180px;justify-content:center}
+.dot{height:5px;border-radius:2.5px;background:#d4b0b8;cursor:pointer;transition:all .28s;border:none}
+.dot.active{background:var(--accent);width:14px!important}
+
+.source{margin-top:20px;font-family:'Cinzel',serif;font-size:8px;color:#c4a0b0;letter-spacing:3px;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<div style="width:100%;max-width:500px;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1">
+
+<header class="header">
+  <div class="eyebrow">✦ Rider–Waite Tarot ✦</div>
+  <h1>Flash Cards</h1>
+</header>
+
+<div class="suit-tabs" id="tabs"></div>
+<div class="suit-desc" id="suitDesc"></div>
+<div class="counter" id="counter"></div>
+
+<div class="card-scene" id="scene" onclick="flip()">
+  <div class="card-inner" id="inner">
+
+    <div class="face front">
+      <div class="front-top">
+        <span class="front-suit" id="fSuit"></span>
+        <span class="front-num" id="fNum"></span>
+      </div>
+      <div class="img-wrap">
+        <div class="img-placeholder" id="imgPH"></div>
+        <img id="cardImg" src="" alt="" onload="this.style.opacity=1;document.getElementById('imgPH').style.display='none'" onerror="this.style.display='none';document.getElementById('imgPH').style.display='flex'" style="opacity:0">
+      </div>
+      <div class="front-bot">
+        <div class="front-name" id="fName"></div>
+        <div class="front-hint">tap to reveal</div>
+      </div>
+    </div>
+
+    <div class="face back">
+      <div class="back-top"><div class="back-name" id="bName"></div></div>
+      <div class="back-scroll">
+        <div>
+          <div class="label">Keywords</div>
+          <div class="keywords-text" id="bKeys"></div>
+        </div>
+        <div class="divider"></div>
+        <div>
+          <div class="label">Meaning</div>
+          <div class="meaning-text" id="bMeaning"></div>
+        </div>
+      </div>
+      <div class="back-bot">
+        <div class="sign-row" id="bSign"></div>
+        <div class="back-hint">tap to flip back</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn" id="prev" onclick="go(-1)">←</button>
+  <div class="dots" id="dots"></div>
+  <button class="nav-btn" id="next" onclick="go(1)">→</button>
+</nav>
+
+<div class="source">Rider–Waite–Smith · Pamela Colman Smith · 1909</div>
+</div>
+
+<script>
+const W = 'https://archive.org/download/rider-waite-tarot/';
+const IMG = {
+  // Major Arcana
+  'The Fool':             W+'major_arcana_fool.png',
+  'The Magician':         W+'major_arcana_magician.png',
+  'The High Priestess':   W+'major_arcana_priestess.png',
+  'The Empress':          W+'major_arcana_empress.png',
+  'The Emperor':          W+'major_arcana_emperor.png',
+  'The Hierophant':       W+'major_arcana_hierophant.png',
+  'The Lovers':           W+'major_arcana_lovers.png',
+  'The Chariot':          W+'major_arcana_chariot.png',
+  'Strength':             W+'major_arcana_strength.png',
+  'The Hermit':           W+'major_arcana_hermit.png',
+  'The Wheel of Fortune': W+'major_arcana_fortune.png',
+  'Justice':              W+'major_arcana_justice.png',
+  'The Hanged Man':       W+'major_arcana_hanged.png',
+  'Death':                W+'major_arcana_death.png',
+  'Temperance':           W+'major_arcana_temperance.png',
+  'The Devil':            W+'major_arcana_devil.png',
+  'The Tower':            W+'major_arcana_tower.png',
+  'The Star':             W+'major_arcana_star.png',
+  'The Moon':             W+'major_arcana_moon.png',
+  'The Sun':              W+'major_arcana_sun.png',
+  'Judgement':            W+'major_arcana_judgement.png',
+  'The World':            W+'major_arcana_world.png',
+  // Wands
+  'Ace of Wands':    W+'minor_arcana_wands_ace.png',
+  'Two of Wands':    W+'minor_arcana_wands_2.png',
+  'Three of Wands':  W+'minor_arcana_wands_3.png',
+  'Four of Wands':   W+'minor_arcana_wands_4.png',
+  'Five of Wands':   W+'minor_arcana_wands_5.png',
+  'Six of Wands':    W+'minor_arcana_wands_6.png',
+  'Seven of Wands':  W+'minor_arcana_wands_7.png',
+  'Eight of Wands':  W+'minor_arcana_wands_8.png',
+  'Nine of Wands':   W+'minor_arcana_wands_9.png',
+  'Ten of Wands':    W+'minor_arcana_wands_10.png',
+  'Page of Wands':   W+'minor_arcana_wands_page.png',
+  'Knight of Wands': W+'minor_arcana_wands_knight.png',
+  'Queen of Wands':  W+'minor_arcana_wands_queen.png',
+  'King of Wands':   W+'minor_arcana_wands_king.png',
+  // Cups
+  'Ace of Cups':    W+'minor_arcana_cups_ace.png',
+  'Two of Cups':    W+'minor_arcana_cups_2.png',
+  'Three of Cups':  W+'minor_arcana_cups_3.png',
+  'Four of Cups':   W+'minor_arcana_cups_4.png',
+  'Five of Cups':   W+'minor_arcana_cups_5.png',
+  'Six of Cups':    W+'minor_arcana_cups_6.png',
+  'Seven of Cups':  W+'minor_arcana_cups_7.png',
+  'Eight of Cups':  W+'minor_arcana_cups_8.png',
+  'Nine of Cups':   W+'minor_arcana_cups_9.png',
+  'Ten of Cups':    W+'minor_arcana_cups_10.png',
+  'Page of Cups':   W+'minor_arcana_cups_page.png',
+  'Knight of Cups': W+'minor_arcana_cups_knight.png',
+  'Queen of Cups':  W+'minor_arcana_cups_queen.png',
+  'King of Cups':   W+'minor_arcana_cups_king.png',
+  // Swords
+  'Ace of Swords':    W+'minor_arcana_swords_ace.png',
+  'Two of Swords':    W+'minor_arcana_swords_2.png',
+  'Three of Swords':  W+'minor_arcana_swords_3.png',
+  'Four of Swords':   W+'minor_arcana_swords_4.png',
+  'Five of Swords':   W+'minor_arcana_swords_5.png',
+  'Six of Swords':    W+'minor_arcana_swords_6.png',
+  'Seven of Swords':  W+'minor_arcana_swords_7.png',
+  'Eight of Swords':  W+'minor_arcana_swords_8.png',
+  'Nine of Swords':   W+'minor_arcana_swords_9.png',
+  'Ten of Swords':    W+'minor_arcana_swords_10.png',
+  'Page of Swords':   W+'minor_arcana_swords_page.png',
+  'Knight of Swords': W+'minor_arcana_swords_knight.png',
+  'Queen of Swords':  W+'minor_arcana_swords_queen.png',
+  'King of Swords':   W+'minor_arcana_swords_king.png',
+  // Pentacles
+  'Ace of Pentacles':    W+'minor_arcana_pentacles_ace.png',
+  'Two of Pentacles':    W+'minor_arcana_pentacles_2.png',
+  'Three of Pentacles':  W+'minor_arcana_pentacles_3.png',
+  'Four of Pentacles':   W+'minor_arcana_pentacles_4.png',
+  'Five of Pentacles':   W+'minor_arcana_pentacles_5.png',
+  'Six of Pentacles':    W+'minor_arcana_pentacles_6.png',
+  'Seven of Pentacles':  W+'minor_arcana_pentacles_7.png',
+  'Eight of Pentacles':  W+'minor_arcana_pentacles_8.png',
+  'Nine of Pentacles':   W+'minor_arcana_pentacles_9.png',
+  'Ten of Pentacles':    W+'minor_arcana_pentacles_10.png',
+  'Page of Pentacles':   W+'minor_arcana_pentacles_page.png',
+  'Knight of Pentacles': W+'minor_arcana_pentacles_knight.png',
+  'Queen of Pentacles':  W+'minor_arcana_pentacles_queen.png',
+  'King of Pentacles':   W+'minor_arcana_pentacles_king.png',
+};
+
+const SUITS = [
+{name:'Major Arcana',emoji:'✦',color:'#c9a84c',desc:'The archetypal forces shaping your soul\'s journey',
+cards:[
+{name:'The Fool',num:'0',sign:'Uranus',keys:'New beginnings, innocence, spontaneity, free spirit, unlimited potential',
+meaning:'Standing at the edge of a cliff, the Fool is about to take a leap into the unknown. Numbered 0 — the number of unlimited potential — he represents each of us at the start of our journey. Open-hearted, unencumbered by experience, he carries only what he truly needs. This is a card of new beginnings, opportunity, and adventure. You are being called to commit and follow your heart, even if you can\'t see the full path ahead. Trust the universe, embrace curiosity, and step forward with faith rather than fear.',
+aff:'I embrace new beginnings with an open heart and trust in the journey ahead.'},
+{name:'The Magician',num:'I',sign:'Mercury',keys:'Manifestation, resourcefulness, power, inspired action, willpower',
+meaning:'The Magician has all four suit symbols on his table — wand, cup, sword, and pentacle — representing the full resources of the universe at his disposal. One hand points to the sky, the other to the earth: as above, so below. He is the bridge between the spiritual and the material, the master of using what he has to create what he wants. When this card appears, you have everything you need to succeed. Focus your will, use your skills, and take decisive action to bring your intentions into reality.',
+aff:'I have all the tools and talent I need to manifest my dreams right now.'},
+{name:'The High Priestess',num:'II',sign:'Moon',keys:'Intuition, sacred knowledge, divine feminine, the subconscious, mystery',
+meaning:'Seated between two pillars — one dark, one light — the High Priestess guards the veil between the conscious and unconscious mind. She holds a scroll of hidden wisdom and the moon rests at her feet. She speaks in whispers, not words. When she appears, you are being called to slow down, listen inward, and trust what you cannot yet fully articulate. Not everything needs to be analyzed or explained. Sit with the mystery. Your intuition is speaking — honor it.',
+aff:'I trust my inner wisdom and honor the quiet voice of my intuition.'},
+{name:'The Empress',num:'III',sign:'Venus',keys:'Femininity, beauty, nature, nurturing, abundance, fertility, creation',
+meaning:'The Empress sits in a lush forest throne, crowned with stars, robed in a gown of pomegranates. She is nature herself — fertile, abundant, and endlessly creative. She represents the full expression of the divine feminine: sensual, nurturing, generative. When she appears, you are called to connect with the physical world, tend to beauty, and allow things to grow at their natural pace. She reminds you that abundance is your birthright and that creation — whether of art, life, or love — is sacred work.',
+aff:'I am connected to the abundance of the earth and allow beauty to flow through me.'},
+{name:'The Emperor',num:'IV',sign:'Aries',keys:'Authority, structure, stability, leadership, father figure, logic, discipline',
+meaning:'Armored on his stone throne, the Emperor is the embodiment of structure and authority. Where the Empress creates, he organizes; where she flows, he builds. He represents the power of logic, strategy, and disciplined action applied to the world. His presence asks you to take command — of your environment, your plans, your impulses. Set clear boundaries. Build solid foundations. True power, he teaches, comes not from dominance but from the calm certainty that comes with self-mastery.',
+aff:'I lead with clarity, build with purpose, and create a foundation of lasting strength.'},
+{name:'The Hierophant',num:'V',sign:'Taurus',keys:'Spiritual wisdom, tradition, institutions, mentorship, conformity, ritual',
+meaning:'Seated between two pillars in ceremonial robes, the Hierophant is the keeper of spiritual tradition. He transmits sacred knowledge through established systems — religion, education, ceremony. When he appears, you may be seeking a teacher, a structured path, or a sense of belonging to something larger than yourself. He asks: what wisdom have those who came before left for you? There is deep value in tradition and in the guidance of those with hard-won experience. Honor the path while finding your place within it.',
+aff:'I am open to the wisdom of those who have walked before me.'},
+{name:'The Lovers',num:'VI',sign:'Gemini',keys:'Love, harmony, relationships, values alignment, choices, union',
+meaning:'More than romance, the Lovers card is about alignment — of values, heart, and self. The angel Raphael blesses the union of two figures, representing the integration of opposites: conscious and unconscious, earthly and divine. A significant choice is before you, one that requires you to examine what you truly value. Whether in relationships, career, or personal path, you are being asked to choose in alignment with your deepest self. The card promises harmony when we act from authentic love rather than fear.',
+aff:'I make choices that align with my truest values and open my heart to genuine connection.'},
+{name:'The Chariot',num:'VII',sign:'Cancer',keys:'Control, willpower, success, determination, victory, ambition, focus',
+meaning:'The Charioteer sits in a star-canopied chariot pulled by two sphinxes — one black, one white — facing opposite directions. He holds no reins; he controls them through sheer will and focused intention. This is a card of hard-won victory, of overcoming obstacles not by force but by mastering conflicting inner drives. You have the determination to succeed. Don\'t let self-doubt or distraction pull you off course. Harness your inner forces, keep your eyes fixed ahead, and charge forward with confidence.',
+aff:'I harness my will and move toward my goals with unstoppable determination.'},
+{name:'Strength',num:'VIII',sign:'Leo',keys:'Courage, persuasion, patience, compassion, inner strength, influence',
+meaning:'A woman gently closes the jaws of a lion with her bare hands. Above her head floats the infinity symbol. This is not physical force — it is the strength of love, patience, and quiet courage. She tames the lion not by overpowering it but by approaching it with gentle confidence. When this card appears, you are called to meet challenges with inner calm rather than aggression. Your softest strengths — compassion, endurance, grace under pressure — are your most powerful weapons.',
+aff:'I meet every challenge with quiet courage, compassion, and unshakable inner calm.'},
+{name:'The Hermit',num:'IX',sign:'Virgo',keys:'Soul-searching, introspection, solitude, inner guidance, withdrawal, wisdom',
+meaning:'The Hermit stands alone on a mountain peak in the dark, lighting his own way with a lantern that holds a six-pointed star. He has withdrawn from the world not out of weakness, but to hear his own truth more clearly. When he appears, you are being called to a period of genuine reflection. Step back from the noise. Seek your own counsel. The answers you\'re looking for are not out there — they\'re within. This is sacred solitude: the kind that illuminates rather than isolates.',
+aff:'I trust the wisdom that lives within me and honor my need for stillness and reflection.'},
+{name:'The Wheel of Fortune',num:'X',sign:'Jupiter',keys:'Good luck, karma, life cycles, destiny, turning points, fate, change',
+meaning:'The Wheel turns — and everything changes. Creatures rise and fall upon it: the Sphinx at the top holding wisdom, serpent and Anubis in descent and ascent. Around the wheel are the four fixed signs of the zodiac, anchoring eternal truth within constant change. This card reminds you that cycles are inevitable. What rises must fall; what falls will rise again. You cannot stop the wheel, but you can learn to flow with it. Pay attention to the patterns in your life. A significant turning point is at hand.',
+aff:'I trust the cycles of life and know that every turning brings new possibility.'},
+{name:'Justice',num:'XI',sign:'Libra',keys:'Justice, fairness, truth, cause and effect, law, accountability, clarity',
+meaning:'Justice sits sword in one hand, scales in the other — balanced, clear-eyed, impartial. She is the cosmic law of cause and effect, the understanding that every action carries consequence. When this card appears, a situation requires honest assessment. Are you being fair — to others and to yourself? Truth must be examined without filters of ego or desire. Justice does not punish; it reflects. What you have sown, you are now reaping. Act with integrity and the scales will find their balance.',
+aff:'I act with integrity, and I trust that truth and fairness will prevail.'},
+{name:'The Hanged Man',num:'XII',sign:'Neptune',keys:'Pause, surrender, letting go, new perspectives, sacrifice, waiting',
+meaning:'The Hanged Man dangles upside-down from a living tree by one foot, yet his expression is serene — even radiant. He has chosen to surrender, to see the world from an entirely different angle. His pause is not defeat; it is revelation. When this card appears, the greatest progress comes not from pushing forward but from releasing your grip. What are you clinging to that\'s keeping you stuck? Suspension is the teacher here. Let go of the need to act, and a new perspective will arrive like light through a window.',
+aff:'I release my need to control and open myself to the gift of a new perspective.'},
+{name:'Death',num:'XIII',sign:'Scorpio',keys:'Endings, change, transformation, transition, release, rebirth, inevitability',
+meaning:'The skeleton knight rides a white horse, and in his wake, kings and peasants alike bow — for death is the great equalizer. Yet behind him rises the sun between two towers, promising dawn. The Death card rarely means physical death. It is about the necessary endings that make space for new life: the end of a relationship, a phase, an identity, a way of thinking. What must you release so something better can live? Grieve what is passing, then face the horizon with courage.',
+aff:'I release what no longer serves me and trust that transformation leads to renewal.'},
+{name:'Temperance',num:'XIV',sign:'Sagittarius',keys:'Balance, moderation, patience, purpose, middle path, alchemy, flow',
+meaning:'An angel stands with one foot in water, one on land, pouring liquid between two cups in an endless, impossible flow. This is alchemy: the blending of opposites into something greater than either alone. Temperance asks you to find the middle path — not asceticism nor excess, but the wise balance that sustains. Patience is its highest lesson. Things are coming together, but not yet. Trust the process. The extraordinary is assembled from the ordinary, one careful measure at a time.',
+aff:'I bring balance and patience to all that I do, trusting in perfect timing.'},
+{name:'The Devil',num:'XV',sign:'Capricorn',keys:'Shadow self, attachment, addiction, restriction, materialism, bondage',
+meaning:'Two figures are chained to the Devil\'s plinth — yet the chains are loose enough to remove. The Devil represents the parts of ourselves we deny, the attachments we mistake for needs, the stories that keep us small. He is not an external force but an inner one: the voice of addiction, fear, compulsion, and illusion of powerlessness. When this card appears, you are being asked to look unflinchingly at what has you bound. The chains are real — but you hold the key. Awareness is the first act of liberation.',
+aff:'I face my shadow with honesty and reclaim the power I have always held.'},
+{name:'The Tower',num:'XVI',sign:'Mars',keys:'Sudden change, upheaval, chaos, revelation, awakening, destruction, truth',
+meaning:'Lightning strikes a tower built on false foundations. Flames burst from the crown; figures fall. It is terrifying — and necessary. The Tower represents the sudden collapse of structures that were never built to last: false beliefs, dysfunctional systems, comfortable lies. The destruction, however violent it feels, creates the clearing needed for something true to grow. When the Tower appears, something in your life is being dismantled. Fight it, and you\'ll suffer longer. Meet it with openness, and you\'ll find the ground is still solid beneath you.',
+aff:'I welcome necessary change, knowing that what crumbles was never truly mine to keep.'},
+{name:'The Star',num:'XVII',sign:'Aquarius',keys:'Hope, faith, purpose, renewal, spirituality, inspiration, serenity',
+meaning:'A naked woman kneels at the water\'s edge beneath a canopy of eight stars, pouring water from two vessels — one into the pool, one onto the land. She is unhurried, trusting, completely at peace. After the chaos of the Tower, the Star offers restoration. It is the card of genuine hope — not wishful thinking, but the quiet certainty that the universe is working on your behalf. You are seen. You are held. Healing is happening. Follow the light of your inspiration and know that you are exactly where you need to be.',
+aff:'I am filled with hope and trust that the universe is guiding me toward healing and renewal.'},
+{name:'The Moon',num:'XVIII',sign:'Pisces',keys:'Illusion, fear, anxiety, the subconscious, dreams, confusion, intuition',
+meaning:'Two towers flank the path to the horizon. A wolf and a dog howl at a moon that reflects the sun\'s light but is not the sun. A crayfish emerges from the pool. Nothing here is quite what it seems. The Moon is the card of the unconscious mind — of dreams, projections, fears, and the stories we tell ourselves in the dark. It asks you to tread carefully through uncertain terrain. Not everything you\'re perceiving is real. Trust your intuition, but examine your fears. The path is there, even if you can\'t yet see it clearly.',
+aff:'I move through uncertainty with calm, trusting my intuition to guide me through the dark.'},
+{name:'The Sun',num:'XIX',sign:'Sun',keys:'Positivity, vitality, success, joy, warmth, clarity, confidence, abundance',
+meaning:'A child rides a white horse beneath a blazing sun, arms wide with joy, a banner of red streaming behind. This is the card of unguarded happiness, of the self fully expressed, of clarity after confusion and joy after grief. The Sun says: you are allowed to feel good about your life. Celebrate your victories, enjoy the warmth of genuine connection, step forward without apology. You have done the work. Now claim the light. After every dark night, this card promises, the sun rises — and today it rises for you.',
+aff:'I radiate joy, welcome abundance, and allow myself to shine without apology.'},
+{name:'Judgement',num:'XX',sign:'Pluto',keys:'Rebirth, inner calling, absolution, reflection, awakening, redemption',
+meaning:'An angel blows a trumpet; the dead rise from their coffins, arms outstretched in joy and surrender. This is not the end — it is the answering of the soul\'s deepest call. Judgement asks you to rise above the story you\'ve been telling about yourself, to release the past with forgiveness, and to answer the calling that has been building in you. You are being invited into a new version of yourself. What do you need to let go of to fully arrive? Absolution is available. Answer the call.',
+aff:'I rise above my past, forgive what must be forgiven, and answer my soul\'s highest calling.'},
+{name:'The World',num:'XXI',sign:'Saturn',keys:'Completion, integration, accomplishment, wholeness, fulfillment, travel, arrival',
+meaning:'A dancer moves freely within a laurel wreath — the symbol of victory — holding two wands, surrounded by the four fixed signs of the zodiac. She is the culmination of the Fool\'s entire journey: every lesson learned, every challenge integrated, every shadow met and transformed. The World is one of the most auspicious cards in the deck. A major chapter is complete. You have arrived. Before you begin the next cycle, pause here in the satisfaction of genuine accomplishment. You have become who you were always becoming.',
+aff:'I celebrate the completion of this journey and stand whole in the fullness of who I am.'}
+]},
+
+{name:'Wands',emoji:'🔥',color:'#e8622a',desc:'Creativity · passion · ambition · Element: Fire',
+cards:[
+{name:'Ace of Wands',num:'Ace',keys:'Inspiration, new opportunities, growth, potential, spark, creative beginnings',
+meaning:'The hand of the universe offers a living wand — still budding, full of green life — against a bright sky. The Ace of Wands is pure creative potential: the electric first spark of a project, passion, or calling. Something wants to be born through you. This is the moment to say yes to the idea that excites you, the vision that won\'t let you rest. Don\'t overthink it. The energy is here, the timing is right. Grab the wand, plant it in the ground, and see what grows.',
+aff:'I embrace the spark of inspiration within me and take the first bold step forward.'},
+{name:'Two of Wands',num:'Two',keys:'Future planning, progress, discovery, personal power, decisions, vision',
+meaning:'A cloaked figure stands on a castle parapet, globe in hand, gazing over the sea toward uncharted horizons. One wand is fixed to the wall behind him; the other he holds. He has the world — literally — in his hands, and must decide which direction to take it. The Two of Wands is about strategic vision: you have achieved a first success and now must plan the next move. The world is genuinely open to you. Where will you go? Start mapping the expedition.',
+aff:'I hold the world in my hands and boldly chart the course toward my greatest vision.'},
+{name:'Three of Wands',num:'Three',keys:'Expansion, foresight, progress, overseas opportunity, looking ahead',
+meaning:'A merchant stands on a cliff\'s edge, watching ships sail out into the world carrying his goods. He has set things in motion; now he waits and watches for them to return multiplied. The Three of Wands signals that your initial efforts are paying off, and there is potential for expansion beyond what you originally imagined. Look to the horizon — there are larger opportunities available than the ones currently in view. Prepare to scale up. What you\'ve built is ready to reach further.',
+aff:'My foundations are strong and my reach extends beyond what I first imagined.'},
+{name:'Four of Wands',num:'Four',keys:'Celebration, harmony, homecoming, milestones, joy, community, stability',
+meaning:'Four wands are garlanded with flowers and fruit, forming a gateway beneath which two figures dance in celebration. Beyond them, a community gathers. This is a card of genuine rejoicing — the milestone reached, the threshold crossed, the homecoming after a long journey. The Four of Wands asks you to stop, acknowledge your progress, and celebrate — not later, not privately, but now, with the people who matter to you. Joy shared is joy multiplied. You\'ve earned this moment.',
+aff:'I pause to celebrate my achievements and share the joy of this moment with those I love.'},
+{name:'Five of Wands',num:'Five',keys:'Conflict, competition, tension, diversity, disagreement, scattered energy',
+meaning:'Five figures brandish wands at each other in a scene of chaotic sparring — though no one appears injured and the energy feels more playful than vicious. The Five of Wands represents the creative friction of competing ideas, agendas, and ambitions. It can feel exhausting and frustrating, but conflict of this kind is generative: it pushes ideas to be stronger and people to be clearer. The challenge here is to distinguish productive tension from pointless strife, and to hold your ground without needing to dominate.',
+aff:'I engage with challenge and competition as fuel for growth, not as a threat to overcome.'},
+{name:'Six of Wands',num:'Six',keys:'Victory, public recognition, progress, self-confidence, achievement, acclaim',
+meaning:'A figure rides triumphantly on horseback, laurel-crowned, wand held high, surrounded by supporters. This is the card of earned success and deserved recognition. Something you have worked hard for is now being acknowledged. The Six of Wands encourages you to accept the acknowledgment gracefully — not with false modesty, not with ego — but with the quiet confidence of someone who knows the work they did to get here. Victory is sweeter when it\'s shared. Celebrate, and use this momentum.',
+aff:'I own my success with confidence and grace, knowing I have earned every step of this victory.'},
+{name:'Seven of Wands',num:'Seven',keys:'Challenge, competition, perseverance, defense, standing ground, determination',
+meaning:'A figure stands on a raised position, defending against six wands thrust up from below. His position is precarious, but his footing is higher than those challenging him. The Seven of Wands says: you have something worth defending, and you\'re capable of defending it. Expect to be challenged. The competition is real, and the pressure may feel relentless. But you have the advantage of your own ground and your own conviction. Don\'t retreat from what you\'ve built. Stand firm, stay focused, and hold your position.',
+aff:'I stand confidently in my truth and defend what I have built with conviction and courage.'},
+{name:'Eight of Wands',num:'Eight',keys:'Movement, speed, swift action, alignment, air travel, momentum, progress',
+meaning:'Eight wands fly through a clear blue sky in perfect parallel formation, racing toward their destination. There is no figure in this card — only pure directed energy in motion. The Eight of Wands heralds a time of rapid progress after a period of stagnation or waiting. Everything is moving now — communications, plans, decisions, travel. Get ready. Act quickly and decisively when opportunities appear. The window is open and the trajectory is clear. This is the universe saying: go.',
+aff:'I move with swiftness and intention, knowing that now is the perfect time for bold action.'},
+{name:'Nine of Wands',num:'Nine',keys:'Resilience, persistence, boundaries, last push, wariness, endurance',
+meaning:'A wounded figure leans on a wand, bandaged head turned to survey the eight wands standing behind him like a fence. He has been through real battles, and he knows it. He is not defeated — but he is watchful, and he is tired. The Nine of Wands says: you have come so far. The finish line is closer than it looks. This is not the time to abandon everything you\'ve built. Rest if you must, but don\'t give up. The strength you\'ve developed is real, and it\'s enough to carry you through.',
+aff:'I am resilient. I have come too far to stop now, and I carry the scars of strength.'},
+{name:'Ten of Wands',num:'Ten',keys:'Burden, extra responsibility, hard work, completion, overextension, pressure',
+meaning:'A figure hunches under the weight of ten wands bundled together, trudging toward a village just visible in the distance. He can barely see where he\'s going, but he has not stopped. The Ten of Wands signals that you are carrying more than your fair share — responsibilities, expectations, or burdens that have accumulated to the point of strain. The destination is in sight, but you may need to ask: what can I put down? What can be delegated, renegotiated, or released? Completion is near — don\'t collapse before you get there.',
+aff:'I release what I no longer need to carry and trust others to help bear the load.'},
+{name:'Page of Wands',num:'Page',sign:'Fire Signs',keys:'Exploration, excitement, discovery, free spirit, new ideas, enthusiasm',
+meaning:'A young figure in a salamander-patterned tunic holds a large wand, staring at it with focused fascination, as if it has just revealed a secret. The Page of Wands is the eternal beginner: curious, fearless, and utterly unencumbered by expectation. A new creative direction or exciting idea is calling you. You don\'t need to have it all figured out yet — that\'s the point. Say yes to the thing that excites you. Start the project. Begin the adventure. Let enthusiasm be your guide.',
+aff:'I pursue new ideas with childlike wonder and fearless curiosity.'},
+{name:'Knight of Wands',num:'Knight',sign:'Sagittarius',keys:'Energy, passion, adventure, impulsiveness, confidence, action, wanderlust',
+meaning:'The Knight of Wands charges forward on a rearing horse, full of fire and forward motion. Salamanders on his armor — symbols of transformation through fire. He is boldness itself: inspired, daring, and magnetic. When he appears, the energy is fast and fiery. Take action on what excites you. Don\'t overthink. The risk is worth taking; the adventure is worth having. Beware only of recklessness — channel this powerful energy with just enough intention to keep the fire burning rather than burning out.',
+aff:'I charge forward with passion and confidence, trusting my fire to light the way.'},
+{name:'Queen of Wands',num:'Queen',sign:'Aries / Sagittarius',keys:'Confidence, independence, social magnetism, determination, vibrancy, leadership',
+meaning:'The Queen of Wands sits on her sun-yellow throne, black cat at her feet, sunflower in hand. She is radiant, self-possessed, and absolutely at home in her power. She knows who she is and what she wants, and she draws others toward her not through effort but through presence. The Queen of Wands is the energy of charismatic, warm-hearted leadership: she lights up every room she enters and gets things done with joy rather than grind. Show up as yourself, fully and unapologetically.',
+aff:'I stand in my power with warmth and confidence, a light that draws others in.'},
+{name:'King of Wands',num:'King',sign:'Sagittarius / Aries',keys:'Natural leadership, vision, entrepreneur, honor, boldness, mastery, inspiration',
+meaning:'The King of Wands sits enthroned, salamander and lion at his sides — symbols of fire and primal strength held in steady command. He is the visionary leader: bold, charismatic, and driven by a long-term purpose. He does not manage details; he sets direction and inspires others to follow. When this card appears, step into full leadership. You have the vision, the experience, and the conviction. Own your authority. Lead from the front, not from behind.',
+aff:'I lead with bold vision and inspire others through my passion and unshakeable purpose.'}
+]},
+
+{name:'Cups',emoji:'💧',color:'#4a90d9',desc:'Emotions · relationships · intuition · Element: Water',
+cards:[
+{name:'Ace of Cups',num:'Ace',keys:'New love, compassion, creativity, intuition, emotional beginnings, spirituality',
+meaning:'A great cup overflows with five streams of water, a dove descending with a communion wafer, lotus blossoms blooming all around. The Ace of Cups is the overflowing of the heart — the beginning of love, creativity, and spiritual connection. Something emotionally significant is opening. A new relationship, a creative channel, a deeper experience of compassion or faith. The invitation is to receive it fully, without reservation. Let your heart open. The cup is offered to you — will you drink?',
+aff:'My heart is open and overflowing. I receive love and give it freely.'},
+{name:'Two of Cups',num:'Two',keys:'Unified love, partnership, mutual attraction, connection, harmony, union',
+meaning:'Two figures exchange cups in a ceremony of mutual commitment, a caduceus and lion\'s head rising between them — symbols of healing and passion held in balance. The Two of Cups is the card of genuine partnership: a meeting of equals, a relationship built on mutual respect, attraction, and shared values. Whether romantic, creative, or professional, this union is harmonious. There is real chemistry here, and real potential. Honor this connection by showing up fully and vulnerably within it.',
+aff:'I attract and nurture relationships built on genuine love, respect, and mutual understanding.'},
+{name:'Three of Cups',num:'Three',keys:'Celebration, friendship, creativity, community, joy, sisterhood, abundance',
+meaning:'Three women raise their cups in joyful toast, surrounded by an abundant harvest. This is pure social joy — the deep nourishment of friendship, creative collaboration, and shared celebration. The Three of Cups says: let yourself enjoy the people in your life. Go to the gathering. Make the toast. Laugh with your closest friends. There is a time for solitary striving and a time for communal joy — this is the latter. Connection of this quality is one of life\'s greatest riches.',
+aff:'I nourish my friendships and allow myself the full joy of genuine connection and celebration.'},
+{name:'Four of Cups',num:'Four',keys:'Contemplation, apathy, reevaluation, withdrawal, discontent, meditation',
+meaning:'A young man sits cross-armed beneath a tree, eyes downcast toward three cups before him, ignoring a fourth cup offered by a hand from a cloud. He is so absorbed in his dissatisfaction that he cannot see the opportunity being extended to him. The Four of Cups asks: what gift are you failing to notice because you\'re focused on what\'s missing? This is a card of introversion, of necessary reevaluation — but also a caution against apathy. Look up. Something real is being offered.',
+aff:'I open my eyes to the gifts that surround me and choose gratitude over discontent.'},
+{name:'Five of Cups',num:'Five',keys:'Loss, grief, regret, disappointment, mourning, focusing on the negative',
+meaning:'A cloaked figure stares at three spilled cups, oblivious to the two still standing full behind him. In the background, a bridge leads to a home. The Five of Cups acknowledges real loss and invites genuine grief. Do not rush past the sorrow — it is legitimate, and it deserves to be felt. But this card also asks you to eventually turn around. Two cups remain upright. The bridge still stands. Grief is not the end of the story, only a chapter. When you are ready, look behind you.',
+aff:'I honor my grief and, when ready, I turn toward what remains and what still awaits me.'},
+{name:'Six of Cups',num:'Six',keys:'Nostalgia, childhood memories, innocence, past connections, revisiting joy',
+meaning:'Two children in a garden: one offers the other a cup filled with white flowers. It is a moment of pure, uncomplicated giving — the kind that belongs to childhood, before self-consciousness and expectation entered the picture. The Six of Cups speaks of the past: happy memories, old friends, places and people who shaped you. It may also signal a literal return — to a hometown, an old relationship, or a long-held dream. Let the innocence of the past remind you what truly matters.',
+aff:'I carry the joy and innocence of my past forward, letting it soften and open my heart.'},
+{name:'Seven of Cups',num:'Seven',keys:'Fantasy, illusion, wishful thinking, choices, temptation, daydreaming',
+meaning:'A silhouetted figure faces seven cups in a cloud, each containing a different vision: castles, jewels, a dragon, a wreath, a figure wrapped in light. The visions are dazzling — and overwhelming. The Seven of Cups is the card of temptation and illusion: too many desires, too many options, and the seductive danger of escaping into fantasy rather than building reality. Not all that glitters is within reach, nor is it worth reaching for. Slow down. Get clear on what you actually want.',
+aff:'I cut through illusion and focus my vision on what is real, meaningful, and truly mine.'},
+{name:'Eight of Cups',num:'Eight',keys:'Abandonment, walking away, withdrawal, seeking deeper meaning, disappointment',
+meaning:'A figure in a red cloak walks away from eight carefully stacked cups toward the dark mountains under a moon\'s eclipse. He does not look back. Something has been built — and yet it is no longer enough. The Eight of Cups is the brave and melancholic card of choosing to walk away from what is comfortable but unfulfilling, in search of something that goes deeper. This is not failure; it is the refusal to settle. The path is dark and uncertain — and it is yours to walk.',
+aff:'I release what no longer nourishes my soul and walk bravely toward something deeper.'},
+{name:'Nine of Cups',num:'Nine',keys:'Contentment, satisfaction, gratitude, fulfillment, luxury, wish come true',
+meaning:'A rotund, self-satisfied figure sits before nine cups arranged on a curved shelf, arms crossed with unmistakable pleasure. He has what he wanted, and he knows it. The Nine of Cups — the famous "wish card" — signals that what you have been hoping for is within reach, or perhaps already here. Allow yourself to feel genuinely good about your life. Don\'t minimize it, don\'t qualify it — just sit with it. Satisfaction is not complacency. It is the harvest of work well done.',
+aff:'I have everything I need to feel genuinely content, and I receive this abundance with gratitude.'},
+{name:'Ten of Cups',num:'Ten',keys:'Divine love, bliss, harmony, family, long-term happiness, emotional fulfillment',
+meaning:'A couple stands with arms around each other, children dancing nearby, a rainbow arc of ten cups overhead, their home in the background. This is the card of the life well lived — not the perfect life, but the deeply fulfilling one. Genuine happiness, secure love, a sense of belonging in your home and your family. The Ten of Cups is the emotional pinnacle of the suit: the reminder that what we are working toward, at the deepest level, is this — love, peace, and a place where we truly belong.',
+aff:'I create and cherish a home filled with genuine love, joy, and lasting harmony.'},
+{name:'Page of Cups',num:'Page',sign:'Water Signs',keys:'Creative opportunity, intuitive messages, curiosity, emotional beginnings, imagination',
+meaning:'A young figure in an elaborate tunic holds a cup from which a fish emerges — and receives this impossible event with charmed delight rather than shock. The Page of Cups is the soul in its most receptive, imaginative, and open-hearted state. A message or creative opportunity is arriving — perhaps through a dream, a synchronicity, an unexpected emotional opening. Don\'t be too rational about it. Let yourself be surprised. The heart speaks in symbols and signs, and this page knows how to listen.',
+aff:'I stay open to the unexpected messages of my heart and let creativity flow freely.'},
+{name:'Knight of Cups',num:'Knight',sign:'Pisces',keys:'Romance, charm, imagination, beauty, following the heart, emotional pursuit',
+meaning:'The Knight of Cups rides his horse at a gentle pace, arm extended offering a cup. He is the archetype of the romantic hero — sensitive, imaginative, attuned to beauty and feeling. When he arrives, something emotionally significant is being offered or pursued. This may be a person, a creative calling, or an invitation to follow your heart somewhere unfamiliar. The Knight of Cups is sincere but can be impractical; let his inspiration move you, but tether the dream to some awareness of reality.',
+aff:'I follow my heart with grace and courage, knowing love and beauty are worth pursuing.'},
+{name:'Queen of Cups',num:'Queen',sign:'Cancer / Pisces',keys:'Compassionate, caring, emotionally stable, intuitive, empathic, nurturing',
+meaning:'The Queen of Cups sits on a throne at the sea\'s edge, holding an ornate covered cup that she contemplates alone — as if seeing into it rather than through it. She is the keeper of the emotional realm: deeply empathic, intuitively gifted, and able to hold space for the feelings of others without being swept away. She asks you to lead with compassion in the situation at hand — and to extend that same tenderness to yourself. Emotional intelligence is her superpower, and right now, it is yours.',
+aff:'I hold space for myself and others with deep compassion, wisdom, and emotional grace.'},
+{name:'King of Cups',num:'King',sign:'Pisces / Cancer',keys:'Emotional balance, compassion, diplomacy, wisdom, calm, generous leadership',
+meaning:'The King of Cups sits on a floating throne amid turbulent waters, utterly composed. He is the master of the emotional realm — not because he feels less but because he understands his feelings deeply and moves through them with grace. His presence signals calm, wise emotional leadership. In the midst of whatever turbulence surrounds you, you are called to be the steady hand — for yourself and perhaps for others. Respond, don\'t react. Hold depth without drowning in it.',
+aff:'I lead with emotional wisdom, remaining calm and compassionate in the face of any storm.'}
+]},
+
+{name:'Swords',emoji:'⚡',color:'#a8c5da',desc:'Thought · conflict · truth · Element: Air',
+cards:[
+{name:'Ace of Swords',num:'Ace',keys:'Breakthrough, clarity, sharp mind, new idea, truth, mental force, cutting through',
+meaning:'A hand extends from a cloud grasping a sword crowned with a wreath and golden crown — the symbol of truth and victory through mental clarity. The Ace of Swords is the sudden breakthrough: the moment when confusion dissolves into clear understanding, when you finally see through the fog. Truth arrives. A new way of thinking emerges. Use this clarity as a sword — cut through what is false, unclear, or unnecessarily complex. Say what is true. Think what is real. This is a moment of extraordinary mental power.',
+aff:'I think with clarity and courage, and I speak my truth without hesitation.'},
+{name:'Two of Swords',num:'Two',keys:'Difficult decision, stalemate, avoidance, indecision, blocked emotions, impasse',
+meaning:'A blindfolded figure sits with two crossed swords held across her chest, her back to a body of water crowded with rocky outcroppings. She has armored herself against the choice before her, refusing to look at it directly. The Two of Swords is the card of the decision refused — the conflict avoided by pretending it doesn\'t exist. But the rocks in the water are real, and ignoring them doesn\'t make the waters safe. Remove the blindfold. Take in the full picture. The decision will not get easier by waiting.',
+aff:'I remove the blindfold, face what I have been avoiding, and make my choice with clarity.'},
+{name:'Three of Swords',num:'Three',keys:'Heartbreak, emotional pain, sorrow, grief, betrayal, separation, hurt',
+meaning:'Three swords pierce a red heart against a stormy sky — one of the tarot\'s most direct and unflinching images. The Three of Swords does not soften grief. It names it. Something has hurt you deeply: a loss, a betrayal, a harsh word spoken, a relationship ended. The pain is real and must be acknowledged. What this card also offers is the understanding that grief, honestly felt, passes. The heart that has been pierced is still beating. Let yourself grieve — then trust your capacity to heal.',
+aff:'I allow myself to feel the full depth of my pain, knowing that healing follows every storm.'},
+{name:'Four of Swords',num:'Four',keys:'Rest, recovery, meditation, recuperation, pause, contemplation, stillness',
+meaning:'A figure lies in stone effigy in a chapel, one sword beneath him, three above. He is not dead — he is resting, healing, withdrawing from the battle to gather himself. The Four of Swords is the essential pause: the rest that is not laziness but medicine. Your mind, your body, or your heart has been in conflict, and it needs restoration before you can continue. This is not retreat — it is strategic recovery. Be still. Be quiet. Let the healing that can only happen in silence do its work.',
+aff:'I give myself full permission to rest, knowing that stillness restores my strength.'},
+{name:'Five of Swords',num:'Five',keys:'Conflict, defeat, dishonor, winning at all costs, hollow victory, betrayal',
+meaning:'A smirking figure collects swords from two dejected opponents who walk away. He has won — but look at his expression, and theirs. This is the card of the hollow victory: winning in a way that costs you more than you gained. Conflict that turns ugly, competition that tips into cruelty, battles where someone — perhaps you, perhaps another — played unfairly. Ask yourself: even if I won, was this worth it? Some battles are better walked away from. Not every hill is worth dying on.',
+aff:'I choose my battles wisely and pursue victory through integrity, not at the expense of others.'},
+{name:'Six of Swords',num:'Six',keys:'Transition, moving on, relief, travel, mental clarity after difficulty, passage',
+meaning:'A ferryman poles a boat carrying two huddled passengers across calm waters away from choppy waves. Six swords stand upright in the bow. The transition is underway. The roughest water is behind you; calmer shores lie ahead. The Six of Swords signals a passage out of difficulty — not a dramatic rescue but a steady, deliberate movement away from what has been painful toward something more peaceful. It may not feel triumphant; transitions rarely do. But the direction is healing. Keep moving.',
+aff:'I leave what has hurt me behind with grace and move steadily toward calmer, clearer waters.'},
+{name:'Seven of Swords',num:'Seven',keys:'Deception, betrayal, getting away with something, strategy, trickery, evasion',
+meaning:'A figure sneaks away from a military camp, five swords in his arms, glancing back at two he had to leave behind. Was he stealing to survive? Planning a strategic retreat? The Seven of Swords is rarely straightforward. It suggests that something is not quite as it appears — someone may be acting duplicitously, or you yourself may be tempted toward an indirect approach when directness is called for. Examine what is being concealed. Not all strategies that "work" are worth the cost to your integrity.',
+aff:'I act with honesty and integrity, knowing that true success requires no deception.'},
+{name:'Eight of Swords',num:'Eight',keys:'Imprisonment, self-limitation, victim mentality, negative thoughts, restriction',
+meaning:'A bound and blindfolded figure stands surrounded by eight upright swords — yet the swords don\'t touch her, and there is a clear path behind her if she could only see it. The bindings, the blindfold, the swords: they are largely self-imposed. The Eight of Swords is the card of the prison we build with our own thinking — the stories about why we can\'t, why we aren\'t enough, why this situation is inescapable. The truth is: the path is there. Remove the blindfold of your limiting beliefs. You are freer than you know.',
+aff:'I release the stories that keep me bound and step freely into my own power.'},
+{name:'Nine of Swords',num:'Nine',keys:'Anxiety, worry, nightmares, fear, despair, mental anguish, dark thoughts',
+meaning:'A figure sits upright in bed, face buried in hands, nine swords mounted on the black wall above. It is the darkest hour of the night, when fears feel most real and most permanent. The Nine of Swords is the card of anxiety at its peak — the catastrophizing mind, the sleepless spiral. The pain is real and should not be minimized. But the swords are on the wall, not in the body. The worst is in the mind. Dawn is coming. Speak your fears to someone who can hold them with you.',
+aff:'I acknowledge my fears with compassion and trust that the darkness gives way to dawn.'},
+{name:'Ten of Swords',num:'Ten',keys:'Painful ending, betrayal, crisis, rock bottom, final blow, but also dawn',
+meaning:'A figure lies face-down, ten swords in his back, on the shore of a dark and stormy sea — yet on the horizon, the sun rises between dark clouds. The Ten of Swords is the card of the ending that feels catastrophic: the betrayal, the collapse, the moment when everything you feared would happen has happened. Yet the image tells the full truth: this is the lowest point, and because it is the lowest, it cannot go further down. The sun is rising. This is the end — and therefore, the beginning.',
+aff:'I accept this ending as a necessary completion and face the rising sun of what comes next.'},
+{name:'Page of Swords',num:'Page',sign:'Air Signs',keys:'Curiosity, restlessness, mental agility, new ideas, vigilance, communicating',
+meaning:'A young figure stands on a windy hilltop, sword raised, eyes alert — ready for whatever comes. The Page of Swords is the mind in its most alert, curious, and quick-thinking state. Questions are being asked; new ways of thinking are emerging; information is being gathered and processed with impressive speed. Be intellectually curious and ready to engage. This is a time to think, ask, read, and be willing to challenge assumptions — including your own. Stay sharp.',
+aff:'I approach new ideas with agility, curiosity, and the courage to ask difficult questions.'},
+{name:'Knight of Swords',num:'Knight',sign:'Aquarius',keys:'Ambitious, driven, fast-thinking, assertive, opinionated, charging ahead',
+meaning:'The Knight of Swords charges forward on a galloping horse at full speed, sword aloft, through a storm. He is relentless, brilliant, and utterly committed to his goal — possibly to a fault. The Knight of Swords is the energy of total mental focus and unstoppable forward momentum. Channel him when you need to act decisively and cut through obstacles. But be careful of recklessness: not every battle needs to be fought at full charge. Make sure the cause is worthy of the energy.',
+aff:'I act with decisiveness and clarity, cutting through what stands between me and my goals.'},
+{name:'Queen of Swords',num:'Queen',sign:'Libra / Aquarius',keys:'Perception, independence, honest communication, fair judgment, clear thinking',
+meaning:'The Queen of Swords sits on a cloud-carved throne, sword raised, one hand extended forward as if beckoning truth closer. She has known grief and turned it into wisdom. She is the queen of clear perception, honest communication, and impartial judgment. She does not deal in illusions or comfortable lies — she sees through them all, and she asks you to do the same. Call things as they are. Speak directly. Extend both honesty and genuine compassion. Clarity is always an act of love.',
+aff:'I see clearly, speak truthfully, and lead with the wisdom born of every lesson I have lived.'},
+{name:'King of Swords',num:'King',sign:'Aquarius / Libra',keys:'Intellectual power, authority, truth, analytical mind, ethical leadership',
+meaning:'The King of Swords sits upright on his throne, sword raised vertical — a symbol of absolute precision and impartiality. He is the master of intellect: disciplined, authoritative, committed to truth above sentiment. He sees through distortion, decides with clarity, and leads with integrity. When he appears, you are called to bring your highest analytical and ethical intelligence to the situation. Do not let emotion cloud your judgment, but also remember that wisdom without heart serves no one.',
+aff:'I lead with truth, clarity, and ethical authority, using my mind in service of what is right.'}
+]},
+
+{name:'Pentacles',emoji:'🌿',color:'#6abf69',desc:'Material world · finances · work · Element: Earth',
+cards:[
+{name:'Ace of Pentacles',num:'Ace',keys:'Manifestation, new financial opportunity, abundance, security, prosperous beginnings',
+meaning:'A hand emerges from a cloud holding a single pentacle above a lush garden gateway. This is pure material potential: a new financial opportunity, a business seed, a path toward security and abundance. The Ace of Pentacles says the door to prosperity is open. A concrete opportunity is being offered. Say yes with practical readiness: have your plan, your tools, your work ethic ready to match the moment. Plant this seed carefully, in good soil, and tend it with patience.',
+aff:'I am open to new abundance and greet each financial opportunity with intention and care.'},
+{name:'Two of Pentacles',num:'Two',keys:'Balance, adaptability, time management, juggling priorities, flexibility',
+meaning:'A young man dances, juggling two pentacles in a figure-eight loop — the symbol of infinity — while ships rise and fall on rough waves behind him. The Two of Pentacles is the art of balance in motion: not static stability but dynamic adaptability. Multiple things are demanding your attention and resources. You are managing — but only just. Look at what can be simplified or delegated. The juggling act is temporary; what you\'re seeking is a more sustainable rhythm.',
+aff:'I navigate competing demands with flexibility and ease, trusting in my ability to find balance.'},
+{name:'Three of Pentacles',num:'Three',keys:'Teamwork, collaboration, building, mastery, learning, craftsmanship, feedback',
+meaning:'Three figures confer in an arched cathedral: an architect, a monk, and a craftsman — each contributing different expertise to a shared creation. The Three of Pentacles is the card of collaborative excellence: the magic that happens when different skills and perspectives are brought together toward a common purpose. Your work is being recognized and refined through skilled collaboration. Welcome feedback. Work with others. Mastery is not built in isolation.',
+aff:'I collaborate with others freely, knowing that what we build together surpasses what I could build alone.'},
+{name:'Four of Pentacles',num:'Four',keys:'Security, conservation, control, possessiveness, stability, scarcity mindset',
+meaning:'A figure sits clutching four pentacles — one balanced on his crown, two under his feet, one gripped to his chest — while the city behind him is barely visible. He has security, but at what cost? He cannot walk, cannot look up, cannot give or receive. The Four of Pentacles asks you to examine your relationship with security. There is wisdom in saving and protecting what you\'ve built. But clinging from fear rather than stewardship creates its own kind of poverty. Hold what you have — and also let it breathe.',
+aff:'I find the balance between financial security and the freedom that comes from genuine generosity.'},
+{name:'Five of Pentacles',num:'Five',keys:'Financial loss, poverty, hardship, isolation, spiritual poverty, struggling',
+meaning:'Two figures trudge through snow past a lit stained glass window, ragged and cold. One is on crutches; they are clearly suffering. The Five of Pentacles speaks honestly to hardship — financial strain, loss of security, or a feeling of being left out in the cold. The pain is real. And yet the window is lit: help, warmth, and shelter exist, if you can bring yourself to look up and ask. Sometimes the hardest thing is to reach for assistance when pride or shame makes us look away.',
+aff:'I ask for help when I need it, knowing that hardship is temporary and support is near.'},
+{name:'Six of Pentacles',num:'Six',keys:'Generosity, charity, giving and receiving, sharing wealth, fairness, balance',
+meaning:'A merchant weighs coins with a scale, distributing them to kneeling figures below. The Six of Pentacles is about the flow of generosity — the give and receive cycle that makes abundance sustainable. You may be in the position of giving or of receiving right now; both are honorable states. This card asks: are you being generous with what you have? And, equally: are you allowing yourself to receive graciously? Wealth — whether material, emotional, or spiritual — is meant to flow.',
+aff:'I give generously and receive with gratitude, knowing that abundance flows through an open hand.'},
+{name:'Seven of Pentacles',num:'Seven',keys:'Long-term view, perseverance, investment, patience, assessment, sustainable results',
+meaning:'A farmer pauses from his labor, resting on his hoe to survey the pentacles growing on the vine. The harvest is not ready yet. He is patient, and he is watching. The Seven of Pentacles is the card of the long game: the sustained effort that builds real value over time. You have been working hard. The results are not yet fully visible — but they are there. This is a moment to step back, assess your progress honestly, and recommit to what is actually working. Good things are growing.',
+aff:'I plant with intention, tend with care, and trust the patient work of long-term growth.'},
+{name:'Eight of Pentacles',num:'Eight',keys:'Apprenticeship, skill development, hard work, mastery, focus, practice, craftsmanship',
+meaning:'A craftsman sits alone carving pentacles, several completed and hung behind him, one still in progress on his bench. He is not distracted; he is not rushing. He is in the deep practice of learning his craft. The Eight of Pentacles is the most quietly powerful card in the deck: mastery through repetition, diligence, and devotion to the work itself. What skill are you developing right now? Give it your full, unhurried attention. Excellence is assembled, one careful stroke at a time.',
+aff:'I commit fully to my craft, knowing that patient, devoted practice is the path to mastery.'},
+{name:'Nine of Pentacles',num:'Nine',keys:'Abundance, luxury, financial independence, self-sufficiency, refinement, reward',
+meaning:'A well-dressed woman stands in a lush vineyard, a hooded falcon on her wrist, pentacles and ripe grapes surrounding her. She is self-sufficient, elegant, and completely at ease with her abundance. She earned this — through discipline, hard work, and the wisdom to invest in herself. The Nine of Pentacles says: you are allowed to enjoy the fruits of your labor. Comfort, beauty, and security are not indulgences — they are the reward for a life built with care. Enjoy what you\'ve created.',
+aff:'I have built something beautiful and I allow myself to fully enjoy its abundance.'},
+{name:'Ten of Pentacles',num:'Ten',keys:'Wealth, legacy, financial security, family, long-term success, inheritance',
+meaning:'An old man sits beneath an arch in an affluent courtyard, surrounded by his family — children, grandchildren, dogs — and ten pentacles arranged in the pattern of the Kabbalistic Tree of Life. This is the legacy card: the wealth that lasts through generations, the home that endures, the family name passed with honor. The Ten of Pentacles is the pinnacle of material success, but its real subject is meaning: wealth that is built to last is built around what truly matters. What are you creating that will outlive you?',
+aff:'I build a life of lasting value — one that will bless not just myself but those who come after me.'},
+{name:'Page of Pentacles',num:'Page',sign:'Earth Signs',keys:'Opportunity, study, new beginnings in career, grounded ambition, practical learning',
+meaning:'A young figure holds a pentacle aloft in both hands, gazing at it with focused wonder — absorbed in its potential rather than already counting coins. The Page of Pentacles is the earnest student of the material world: hardworking, curious, and grounded. A new financial or career opportunity is presenting itself. Approach it with thoroughness and patience. Do the research. Build the skills. Don\'t rush the foundation. The opportunity is real — it simply requires you to meet it with preparation.',
+aff:'I approach new opportunities with diligence, curiosity, and a willingness to do the work.'},
+{name:'Knight of Pentacles',num:'Knight',sign:'Capricorn / Taurus',keys:'Hard work, reliability, routine, conservatism, steady progress, responsibility',
+meaning:'The Knight of Pentacles sits motionless on a heavy horse in a plowed field, pentacle in hand, surveying his domain with steady patience. Unlike the other knights who charge ahead, he is still — but not idle. He is methodical. He is reliable. He does what he says he will do, every time. The Knight of Pentacles represents the irreplaceable value of consistency: not brilliance, but the kind of steady, responsible effort that actually builds things that last. Show up. Do the work. Follow through.',
+aff:'I show up consistently and do the steady, reliable work that builds something lasting and real.'},
+{name:'Queen of Pentacles',num:'Queen',sign:'Capricorn',keys:'Nurturing, practical, financial independence, down-to-earth, abundant, generous',
+meaning:'The Queen of Pentacles sits in a flourishing garden, a pentacle in her lap, a rabbit darting past — symbols of abundance and fertility held in comfortable ease. She is warm, practical, and genuinely abundant: skilled at creating comfort for herself and others, at managing resources wisely and generously. She knows the value of things. She tends what she loves. When she appears, she invites you to create a life that feels as nourishing as it looks — to care for your home, your body, your finances with gentle competence.',
+aff:'I create a life of warmth and abundance, tending to what I love with practical care and generosity.'},
+{name:'King of Pentacles',num:'King',sign:'Capricorn / Taurus',keys:'Abundance, security, business leadership, discipline, financial mastery, legacy',
+meaning:'The King of Pentacles sits on a throne decorated with bulls and carved vines, a pentacle in hand, grapes and abundant vegetation surrounding him on all sides. He has built something real: a life of security, a business that thrives, a legacy that endures. He is not reckless with what he has built; he is prudent, disciplined, and supremely capable. When he appears, you are called to take full responsibility for your material world — to think long-term, manage well, and build with the patient confidence of someone who knows exactly what they\'re doing.',
+aff:'I build lasting wealth and security with discipline, wisdom, and a generous, grounded heart.'}
+]}
+];
+
+// ─── State ────────────────────────────────────────────────────────
+let si=0, ci=0, flipped=false;
+
+function accent(c){document.documentElement.style.setProperty('--accent',c)}
+
+function renderTabs(){
+  document.getElementById('tabs').innerHTML=SUITS.map((s,i)=>
+    `<button class="suit-tab ${i===si?'active':''}" onclick="pickSuit(${i})">${s.emoji} ${s.name}</button>`
+  ).join('')
+}
+
+function renderCard(){
+  const S=SUITS[si], C=S.cards[ci];
+  accent(S.color);
+  document.getElementById('suitDesc').textContent=S.desc;
+  document.getElementById('counter').textContent=`${ci+1} / ${S.cards.length}`;
+
+  // Front
+  const fs=document.getElementById('fSuit');
+  fs.textContent=S.name; fs.style.color=S.color+'99';
+  const fn=document.getElementById('fNum');
+  fn.textContent=C.num; fn.style.color=S.color;
+  document.getElementById('fName').textContent=C.name;
+
+  // Image
+  const img=document.getElementById('cardImg');
+  const ph=document.getElementById('imgPH');
+  img.style.opacity='0'; img.style.display='block';
+  ph.style.display='flex'; ph.textContent=S.emoji;
+  const url=IMG[C.name];
+  if(url){img.src=url; img.alt=C.name}
+
+  // Back
+  document.getElementById('bName').textContent=C.name;
+  document.getElementById('bKeys').textContent=C.keys;
+  document.getElementById('bMeaning').textContent=C.meaning;
+  const signEl=document.getElementById('bSign');
+  signEl.textContent=C.sign?C.sign:'';
+
+  // Dots
+  document.getElementById('dots').innerHTML=S.cards.map((_,i)=>
+    `<div class="dot ${i===ci?'active':''}" style="width:${i===ci?14:5}px" onclick="goTo(${i})"></div>`
+  ).join('');
+
+  const P=document.getElementById('prev'), N=document.getElementById('next');
+  P.disabled=ci===0; N.disabled=ci===S.cards.length-1;
+  P.style.color=ci===0?'':S.color; N.style.color=ci===S.cards.length-1?'':S.color;
+  P.style.borderColor=ci===0?'#1e1630':S.color+'55';
+  N.style.borderColor=ci===S.cards.length-1?'#1e1630':S.color+'55';
+}
+
+function flip(){flipped=!flipped; document.getElementById('inner').classList.toggle('flipped',flipped)}
+function pickSuit(i){si=i;ci=0;flipped=false;document.getElementById('inner').classList.remove('flipped');renderTabs();renderCard()}
+function goTo(i){if(i===ci)return;ci=i;flipped=false;document.getElementById('inner').classList.remove('flipped');renderCard()}
+function go(d){const n=ci+d;if(n<0||n>=SUITS[si].cards.length)return;goTo(n)}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight')go(1);
+  if(e.key==='ArrowLeft')go(-1);
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();flip()}
+});
+
+renderTabs();renderCard();
+
+// ── Service Worker (offline support) ──────────────────────
+if('serviceWorker' in navigator){
+  const swCode = `
+const CACHE = 'tarot-v1';
+const FONTS = [
+  'https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&display=swap',
+  'https://fonts.gstatic.com'
+];
+
+self.addEventListener('install', e => {
+  self.skipWaiting();
+});
+
+self.addEventListener('fetch', e => {
+  // Cache-first for Google Fonts; network-first for card images
+  const url = e.request.url;
+  if(url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com')){
+    e.respondWith(
+      caches.open(CACHE).then(cache =>
+        cache.match(e.request).then(cached =>
+          cached || fetch(e.request).then(res => { cache.put(e.request, res.clone()); return res; })
+        )
+      )
+    );
+  }
+  // Let everything else (card images, etc.) go to network normally
+});
+  `;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+}
+</script>
+</body>
+</html>
